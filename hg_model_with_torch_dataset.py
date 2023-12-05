@@ -45,7 +45,7 @@ class ImageNet(torchvision.datasets.ImageFolder):
         logger.info('Initialized ImageNet')
         
 
-pretrained_model = 'google/vit-base-patch16-224-in21k'
+pretrained_model = 'google/vit-base-patch16-224'
 model = ViTForImageClassification.from_pretrained(pretrained_model)
 
 val_transform = transforms.Compose([
@@ -76,18 +76,30 @@ accuracy = evaluate.load("accuracy")
 
 # REVIEW: If you do not load model to GPU, you will get 
 # "RuntimeError: Input type (c10:Half) and bias type (float) should be the same"
+# Refer to this post: https://discuss.huggingface.co/t/is-transformers-using-gpu-by-default/8500/2
 model.to(device)
 
+total, correct = 0, 0
 for data in tqdm(val_data_loader):
     with torch.cuda.amp.autocast(enabled=True):
         inputs, labels = data[0].to(device), data[1].to(device)
-        predicted_labels = model(inputs).logits
+        # outputs.shape = (batch_size, num_labels) = torch.Size([64, 1000])
+        outputs = model(inputs).logits
+    '''
+    Predictions and/or references don't match the expected format.
+    Expected format: {'predictions': Value(dtype='int32', id=None), 'references': Value(dtype='int32', id=None)},
+    Input predictions: tensor([[-0.0220, -0.2046],
+    '''
+    # predicted_labels.shape = (batch_size,) = torch.Size([64])
+    # labels.shape = (batch_size,) = torch.Size([64])
     
-    accuracy.add_batch(predictions=predicted_labels, references=labels)
-
-accuracy.compute()
-
-
-# image = processor(Image.open(img_fpath).convert('RGB'), return_tensors="pt")
-    # with torch.no_grad():
-    #     logits = model(**image).logits
+    # First method (readable)
+    '''
+    predicted_labels = outputs.argmax(-1)
+    total += inputs.shape[0]
+    correct += (predicted_labels == labels).sum().item()'''
+    
+    # Second approach (concise)
+    correct += outputs.max(dim=1).indices.eq(labels).sum().item()
+    
+print(f"Custom accuracy: {(correct/total) * 100:.2f}%")

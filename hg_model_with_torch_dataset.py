@@ -4,14 +4,9 @@ import torchvision.transforms as transforms
 
 import logging
 import os
-import sys
 from tqdm import tqdm
 
-from transformers import ViTForImageClassification
-import evaluate
-
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logger = logging.getLogger()
+from transformers import ViTForImageClassification, ViTMSNPreTrainedModel
 
 class ImageNet(torchvision.datasets.ImageFolder):
     def __init__(
@@ -65,6 +60,7 @@ val_dataset = ImageNet(
         transform=val_transform,
         train=False)
 
+# NOTE: batch_size=64 is the maximum batch size (approximately uses up to 7.9GB) that can fit in my GPU (RTX-2080 8GB)
 val_data_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=64,
@@ -72,7 +68,6 @@ val_data_loader = torch.utils.data.DataLoader(
         num_workers=4)
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-accuracy = evaluate.load("accuracy")
 
 # REVIEW: If you do not load model to GPU, you will get 
 # "RuntimeError: Input type (c10:Half) and bias type (float) should be the same"
@@ -100,6 +95,10 @@ for data in tqdm(val_data_loader):
     correct += (predicted_labels == labels).sum().item()'''
     
     # Second approach (concise)
+    total += inputs.shape[0]
     correct += outputs.max(dim=1).indices.eq(labels).sum().item()
     
+    del inputs, labels, outputs
+
+# Custom accuracy: 75.66%    
 print(f"Custom accuracy: {(correct/total) * 100:.2f}%")

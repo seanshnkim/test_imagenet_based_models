@@ -1,0 +1,5 @@
+model_name: 'torchvision-resnet50'
+root_path: '.'
+image_folder: '../imagenet'
+batch_size: 128
+num_workers: 4

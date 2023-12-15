@@ -30,3 +30,18 @@ This repository mainly des
 ![Alt text](attachments/download_imagenet.png?raw=true "How to download ImageNet1K")
 
 ![Alt text](attachments/download_train_val_test_each.png?raw=true "Download each dataset")
+
+<br>
+
+## How to Download Datasets from Hugging Face
+1. Go to [access token page in Huggingface](https://huggingface.co/settings/tokens)
+
+![Alt text](attachments/hg_token_creating_page.png?raw=true "Access Token Page in Huggingface")
+
+2. Create a new token and copy the content.
+3. Go to your terminal, and type `huggingface-cli login`.
+
+![Alt text](attachments/token_create_terminal_output.png?raw=true "Terminal Output After Login")
+
+4. Type in your pasted token. Since it is credential, it wouldn't show any sign of entering the token (e.g. cursor location being changed).
+
